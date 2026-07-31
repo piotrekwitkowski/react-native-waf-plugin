@@ -18,6 +18,8 @@ import type { WafFetchResponse } from '@piwit/react-native-aws-waf-plugin';
 const DEFAULT_CHALLENGE_URL =
   'https://<your-id>.<region>.sdk.awswaf.com/<your-id>/<your-hash>/challenge.js';
 
+const TOKEN_DOMAINS = ['api.example.com'] as const;
+
 const DEMO_FETCH_URL = 'https://httpbin.org/get';
 
 function TokenDisplay() {
@@ -145,6 +147,7 @@ function App(): React.JSX.Element {
 
         <WafProvider
           challengeJsUrl={challengeUrl}
+          tokenDomains={TOKEN_DOMAINS}
           onReady={() => setReady(true)}
           onError={(err) => setProviderError(err.message)}
         >

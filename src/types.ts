@@ -1,6 +1,10 @@
+export type WafTokenDomains = readonly [string, ...string[]];
+
 export interface WafConfig {
   /** Full URL to the challenge.js script */
   challengeJsUrl: string;
+  /** Domains where the WAF token will be used. The first domain is stored in the token. */
+  tokenDomains: WafTokenDomains;
   /** Timeout in ms for bridge operations (default: 10000) */
   timeout?: number;
   /** How challenge.js is injected into the WebView (default: 'bridge') */

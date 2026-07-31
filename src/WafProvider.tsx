@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import WebView from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WafBridge } from './bridge';
+import { normalizeTokenDomains } from './domains';
 import { generateHtml, generateHtmlWithLoader } from './html';
 import type { WafClient, WafConfig } from './types';
 import { WafContext } from './WafContext';
@@ -14,6 +15,7 @@ const HIDDEN_STYLE = { height: 0, width: 0, position: 'absolute' as const, top: 
 
 export function WafProvider({
   challengeJsUrl,
+  tokenDomains,
   timeout,
   scriptInjection = 'bridge',
   onReady,
@@ -23,6 +25,8 @@ export function WafProvider({
   const webViewRef = useRef<WebView>(null);
   const bridgeRef = useRef(new WafBridge(timeout));
   const [isReady, setIsReady] = useState(false);
+  const normalizedTokenDomains = normalizeTokenDomains(tokenDomains);
+  const tokenDomainsKey = normalizedTokenDomains.join(',');
 
   useEffect(() => {
     const bridge = bridgeRef.current;
@@ -44,12 +48,12 @@ export function WafProvider({
 
     bridge.whenShellReady().then(() => {
       if (scriptInjection === 'bridge') {
-        bridge.loadScript(challengeJsUrl);
+        bridge.loadScript(challengeJsUrl, normalizedTokenDomains);
       } else {
-        bridge.loadScriptViaHtml(challengeJsUrl);
+        bridge.loadScriptViaHtml(challengeJsUrl, normalizedTokenDomains);
       }
     });
-  }, [challengeJsUrl, scriptInjection]);
+  }, [challengeJsUrl, scriptInjection, tokenDomainsKey]);
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     bridgeRef.current.handleMessage(event.nativeEvent.data);

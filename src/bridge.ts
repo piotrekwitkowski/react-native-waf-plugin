@@ -1,4 +1,10 @@
-import type { BridgeEvent, WafFetchOptions, WafFetchResponse } from './types';
+import { normalizeTokenDomains } from './domains';
+import type {
+  BridgeEvent,
+  WafFetchOptions,
+  WafFetchResponse,
+  WafTokenDomains,
+} from './types';
 
 type BridgeEventExtended = BridgeEvent | { type: 'shell_ready' };
 
@@ -97,13 +103,15 @@ export class WafBridge {
     }
   }
 
-  async loadScript(url: string): Promise<void> {
+  async loadScript(url: string, tokenDomains: WafTokenDomains): Promise<void> {
     await this.shellReadyPromise;
     if (!this.injectJs) {
       throw new Error('WafBridge: injector not set. Is WafProvider mounted?');
     }
     const escaped = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const serializedTokenDomains = JSON.stringify(normalizeTokenDomains(tokenDomains));
     this.injectJs(`(function(){
+      window.awsWafCookieDomainList = ${serializedTokenDomains};
       var s = document.createElement('script');
       s.src = '${escaped}';
       s.onload = function() { waitForWaf(25); };
@@ -117,13 +125,15 @@ export class WafBridge {
     })(); true;`);
   }
 
-  async loadScriptViaHtml(url: string): Promise<void> {
+  async loadScriptViaHtml(url: string, tokenDomains: WafTokenDomains): Promise<void> {
     await this.shellReadyPromise;
     if (!this.injectJs) {
       throw new Error('WafBridge: injector not set. Is WafProvider mounted?');
     }
     const escaped = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    this.injectJs(`window.__wafLoadScript('${escaped}'); true;`);
+    const serializedTokenDomains = JSON.stringify(normalizeTokenDomains(tokenDomains));
+    this.injectJs(`window.awsWafCookieDomainList = ${serializedTokenDomains};
+      window.__wafLoadScript('${escaped}'); true;`);
   }
 
   private async send<T>(

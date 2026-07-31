@@ -1,5 +1,6 @@
 export type {
   WafConfig,
+  WafTokenDomains,
   WafClient,
   WafFetchOptions,
   WafFetchResponse,

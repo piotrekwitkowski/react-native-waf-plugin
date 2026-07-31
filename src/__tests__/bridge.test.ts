@@ -41,6 +41,44 @@ describe('WafBridge', () => {
     });
   });
 
+  describe('script loading', () => {
+    beforeEach(() => {
+      bridge.handleMessage(JSON.stringify({ type: 'shell_ready' }));
+    });
+
+    it('sets token domains before creating the script in bridge mode', async () => {
+      await bridge.loadScript(
+        'https://cdn.example.com/challenge.js',
+        ['api.example.com', 'api.example.net'],
+      );
+
+      expect(injectedCalls).toHaveLength(1);
+      const injected = injectedCalls[0];
+      expect(injected).toContain(
+        'window.awsWafCookieDomainList = ["api.example.com","api.example.net"]',
+      );
+      expect(injected.indexOf('window.awsWafCookieDomainList')).toBeLessThan(
+        injected.indexOf("document.createElement('script')"),
+      );
+    });
+
+    it('sets token domains before calling the HTML loader', async () => {
+      await bridge.loadScriptViaHtml(
+        'https://cdn.example.com/challenge.js',
+        ['api.example.com'],
+      );
+
+      expect(injectedCalls).toHaveLength(1);
+      const injected = injectedCalls[0];
+      expect(injected).toContain(
+        'window.awsWafCookieDomainList = ["api.example.com"]',
+      );
+      expect(injected.indexOf('window.awsWafCookieDomainList')).toBeLessThan(
+        injected.indexOf('window.__wafLoadScript'),
+      );
+    });
+  });
+
   describe('hasToken', () => {
     it('resolves with boolean', async () => {
       const promise = bridge.hasToken(1000);
