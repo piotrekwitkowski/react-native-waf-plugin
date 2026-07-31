@@ -45,7 +45,7 @@ export interface WafTokenState {
   loading: boolean;
   /** Last error from token acquisition */
   error: Error | null;
-  /** Manually trigger a token refresh */
+  /** Request the current valid token and update the hook state */
   refresh: () => Promise<string>;
 }
 

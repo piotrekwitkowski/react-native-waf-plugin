@@ -146,7 +146,7 @@ Wrap your app (or a subtree) with this component. It renders a hidden 0x0 WebVie
 
 ### `useWafToken()`
 
-Returns a reactive token state. Automatically fetches a token once the bridge is ready.
+Fetches a token when the bridge is ready and tracks the request in React state. It does not observe SDK background refreshes; call `refresh()` to update the exposed token.
 
 ```ts
 const { token, loading, error, refresh } = useWafToken();
@@ -157,7 +157,7 @@ const { token, loading, error, refresh } = useWafToken();
 | `token` | `string \| null` | Current token value, or `null` if not yet acquired |
 | `loading` | `boolean` | Whether a token request is in flight |
 | `error` | `Error \| null` | Last error from token acquisition |
-| `refresh` | `() => Promise<string>` | Manually trigger a fresh token request |
+| `refresh` | `() => Promise<string>` | Request the current valid token and update the hook state |
 
 ### `useWafFetch()`
 
