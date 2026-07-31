@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { Text } from 'react-native';
+import { WafBridge } from '../bridge';
 import { WafProvider } from '../WafProvider';
 
 const TOKEN_DOMAINS = ['api.example.com'] as const;
@@ -71,5 +72,34 @@ describe('WafProvider', () => {
       width: 0,
       opacity: 0,
     });
+    expect(webview.props.containerStyle).toMatchObject(style);
+  });
+
+  it('only disposes the bridge on unmount', () => {
+    const disposeSpy = jest.spyOn(WafBridge.prototype, 'dispose');
+    const { rerender, unmount } = render(
+      <WafProvider
+        challengeJsUrl="https://cdn.example.com/challenge.js"
+        tokenDomains={TOKEN_DOMAINS}
+        onError={jest.fn()}
+      >
+        <Text>Child</Text>
+      </WafProvider>,
+    );
+
+    rerender(
+      <WafProvider
+        challengeJsUrl="https://cdn.example.com/challenge.js"
+        tokenDomains={TOKEN_DOMAINS}
+        onError={jest.fn()}
+      >
+        <Text>Child</Text>
+      </WafProvider>,
+    );
+
+    expect(disposeSpy).not.toHaveBeenCalled();
+    unmount();
+    expect(disposeSpy).toHaveBeenCalledTimes(1);
+    disposeSpy.mockRestore();
   });
 });

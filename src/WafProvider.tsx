@@ -37,8 +37,12 @@ export function WafProvider({
       },
       (err) => onError?.(err),
     );
-    return () => bridge.dispose();
   }, [onReady, onError]);
+
+  useEffect(() => {
+    const bridge = bridgeRef.current;
+    return () => bridge.dispose();
+  }, []);
 
   useEffect(() => {
     const bridge = bridgeRef.current;
@@ -84,6 +88,7 @@ export function WafProvider({
       originWhitelist: ['*'],
       javaScriptEnabled: true,
       style: HIDDEN_STYLE,
+      containerStyle: HIDDEN_STYLE,
       pointerEvents: 'none',
     }),
     children,

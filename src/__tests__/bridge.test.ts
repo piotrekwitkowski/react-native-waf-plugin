@@ -4,10 +4,9 @@ import { WafBridge } from '../bridge';
 const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
 
 function extractCommand(injectedJs: string): { type: string; requestId: string; [key: string]: unknown } {
-  const match = injectedJs.match(/data: '(.+?)' \}\)\)/);
+  const match = injectedJs.match(/data: ("(?:\\.|[^"\\])*")/);
   if (!match) throw new Error('Could not extract command from: ' + injectedJs);
-  const raw = match[1].replace(/\\'/g, "'").replace(/\\\\/g, '\\');
-  return JSON.parse(raw);
+  return JSON.parse(JSON.parse(match[1]));
 }
 
 describe('WafBridge', () => {
@@ -47,8 +46,9 @@ describe('WafBridge', () => {
     });
 
     it('sets token domains before creating the script in bridge mode', async () => {
+      const url = "https://cdn.example.com/challenge'script.js";
       await bridge.loadScript(
-        'https://cdn.example.com/challenge.js',
+        url,
         ['api.example.com', 'api.example.net'],
       );
 
@@ -60,6 +60,7 @@ describe('WafBridge', () => {
       expect(injected.indexOf('window.awsWafCookieDomainList')).toBeLessThan(
         injected.indexOf("document.createElement('script')"),
       );
+      expect(injected).toContain(`s.src = ${JSON.stringify(url)}`);
     });
 
     it('sets token domains before calling the HTML loader', async () => {
@@ -97,12 +98,18 @@ describe('WafBridge', () => {
 
   describe('fetch', () => {
     it('resolves with response object shape', async () => {
-      const promise = bridge.fetch('https://example.com', { method: 'POST' }, 1000);
+      const body = "apostrophe: ', slash: \\";
+      const promise = bridge.fetch(
+        'https://example.com',
+        { method: 'POST', body },
+        1000,
+      );
       await flush();
 
       const cmd = extractCommand(injectedCalls[0]);
       expect(cmd.type).toBe('fetch');
       expect(cmd.url).toBe('https://example.com');
+      expect(cmd.options).toEqual({ method: 'POST', body });
 
       const response = { status: 200, headers: { 'content-type': 'application/json' }, body: '{}' };
       bridge.handleMessage(

@@ -16,11 +16,11 @@ export interface WafConfig {
 }
 
 export interface WafClient {
-  /** Get a fresh WAF token. Resolves with the token string. */
+  /** Get the current valid WAF token. Resolves with the token string. */
   getToken(): Promise<string>;
   /** Check if an unexpired token exists. */
   hasToken(): Promise<boolean>;
-  /** Drop-in fetch replacement that auto-attaches WAF token. */
+  /** WebView fetch wrapper that auto-attaches the WAF token. Browser CORS rules apply. */
   fetch(url: string, options?: WafFetchOptions): Promise<WafFetchResponse>;
   /** Whether challenge.js has loaded and is ready. */
   isReady: boolean;

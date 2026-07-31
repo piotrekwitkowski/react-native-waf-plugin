@@ -1,6 +1,6 @@
 {
   "name": "@piwit/react-native-aws-waf-plugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React Native wrapper for AWS WAF challenge.js — exposes WAF token acquisition at the JS app level via a hidden WebView bridge",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",

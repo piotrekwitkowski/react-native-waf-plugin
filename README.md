@@ -161,7 +161,7 @@ const { token, loading, error, refresh } = useWafToken();
 
 ### `useWafFetch()`
 
-Returns a fetch-like function that auto-attaches the WAF token to requests.
+Runs `AwsWafIntegration.fetch()` inside the hidden WebView. Normal browser CORS rules apply, and the response body is returned as buffered text rather than a standard `Response`.
 
 ```ts
 const wafFetch = useWafFetch();
@@ -193,7 +193,7 @@ if (client.isReady) {
 
 | Method / Property | Type | Description |
 |---|---|---|
-| `getToken()` | `Promise<string>` | Get a fresh WAF token |
+| `getToken()` | `Promise<string>` | Get the current valid WAF token |
 | `hasToken()` | `Promise<boolean>` | Check if an unexpired token exists |
 | `fetch(url, options?)` | `Promise<WafFetchResponse>` | Fetch with WAF token auto-attached |
 | `isReady` | `boolean` | Whether challenge.js has loaded |

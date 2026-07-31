@@ -108,17 +108,18 @@ export class WafBridge {
     if (!this.injectJs) {
       throw new Error('WafBridge: injector not set. Is WafProvider mounted?');
     }
-    const escaped = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const serializedUrl = JSON.stringify(url);
+    const serializedError = JSON.stringify(`Failed to load script: ${url}`);
     const serializedTokenDomains = JSON.stringify(normalizeTokenDomains(tokenDomains));
     this.injectJs(`(function(){
       window.awsWafCookieDomainList = ${serializedTokenDomains};
       var s = document.createElement('script');
-      s.src = '${escaped}';
+      s.src = ${serializedUrl};
       s.onload = function() { waitForWaf(25); };
       s.onerror = function() {
         window.ReactNativeWebView.postMessage(JSON.stringify({
           type: 'error',
-          error: 'Failed to load script: ${escaped}'
+          error: ${serializedError}
         }));
       };
       document.head.appendChild(s);
@@ -130,10 +131,10 @@ export class WafBridge {
     if (!this.injectJs) {
       throw new Error('WafBridge: injector not set. Is WafProvider mounted?');
     }
-    const escaped = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const serializedUrl = JSON.stringify(url);
     const serializedTokenDomains = JSON.stringify(normalizeTokenDomains(tokenDomains));
     this.injectJs(`window.awsWafCookieDomainList = ${serializedTokenDomains};
-      window.__wafLoadScript('${escaped}'); true;`);
+      window.__wafLoadScript(${serializedUrl}); true;`);
   }
 
   private async send<T>(
@@ -148,7 +149,7 @@ export class WafBridge {
 
     const requestId = `r${++this.counter}`;
     const fullCommand = { ...command, requestId };
-    const json = JSON.stringify(fullCommand);
+    const serializedCommand = JSON.stringify(JSON.stringify(fullCommand));
 
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -162,9 +163,8 @@ export class WafBridge {
         timer,
       });
 
-      const escaped = json.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       this.injectJs!(
-        `window.dispatchEvent(new MessageEvent('message', { data: '${escaped}' })); true;`,
+        `window.dispatchEvent(new MessageEvent('message', { data: ${serializedCommand} })); true;`,
       );
     });
   }
