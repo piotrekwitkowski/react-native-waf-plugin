@@ -149,7 +149,10 @@ export class WafBridge {
 
     const requestId = `r${++this.counter}`;
     const fullCommand = { ...command, requestId };
-    const serializedCommand = JSON.stringify(JSON.stringify(fullCommand));
+    const commandJson = JSON.stringify(fullCommand);
+    // event.data must be JSON text. Encode that text as a safe JavaScript string
+    // literal before inserting it into the script passed to injectJavaScript().
+    const commandDataLiteral = JSON.stringify(commandJson);
 
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -164,7 +167,7 @@ export class WafBridge {
       });
 
       this.injectJs!(
-        `window.dispatchEvent(new MessageEvent('message', { data: ${serializedCommand} })); true;`,
+        `window.dispatchEvent(new MessageEvent('message', { data: ${commandDataLiteral} })); true;`,
       );
     });
   }

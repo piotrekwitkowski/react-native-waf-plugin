@@ -6,7 +6,9 @@ const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
 function extractCommand(injectedJs: string): { type: string; requestId: string; [key: string]: unknown } {
   const match = injectedJs.match(/data: ("(?:\\.|[^"\\])*")/);
   if (!match) throw new Error('Could not extract command from: ' + injectedJs);
-  return JSON.parse(JSON.parse(match[1]));
+
+  const commandJson = JSON.parse(match[1]) as string;
+  return JSON.parse(commandJson);
 }
 
 describe('WafBridge', () => {
